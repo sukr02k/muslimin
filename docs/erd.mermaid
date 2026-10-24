@@ -1,0 +1,50 @@
+erDiagram
+    SURAH ||--o{ AYAH : has
+    SURAH ||--o{ QURAN_BOOKMARK : bookmarked
+    SURAH ||--o{ READING_PROGRESS : progress
+    PRAYER_LOG {
+        int id PK
+        date prayer_date
+        string prayer_name
+        string status
+        datetime completed_at
+        datetime created_at
+    }
+    QURAN_BOOKMARK {
+        int id PK
+        int surah_number FK
+        int ayah_number
+        datetime created_at
+    }
+    READING_PROGRESS {
+        int id PK
+        int surah_number FK
+        int ayah_number
+        datetime last_read_at
+    }
+    APP_SETTINGS {
+        string key PK
+        string value
+    }
+    SURAH {
+        int number PK
+        string name_ar
+        string name_id
+        string english_name
+        int ayah_count
+        string revelation_type
+    }
+    AYAH {
+        int id PK
+        int surah_number FK
+        int number_in_surah
+        text text_arabic
+        text text_id
+        int page
+        int juz
+    }
+```
+
+> Catatan: `SURAH` dan `AYAH` adalah data statis (read-only) yang dibundel sebagai asset lokal — bukan tabel yang ditulis user. Tabel writable (`PRAYER_LOG`, `QURAN_BOOKMARK`, `READING_PROGRESS`, `APP_SETTINGS`) hidup di DB lokal perangkat (drift/SQLite).
+>
+> Preferensi Adhan Reminder (toggle per sholat + offset menit) disimpan di `APP_SETTINGS` sebagai JSON pada key `adhan_reminder`, sehingga tidak butuh tabel baru.
