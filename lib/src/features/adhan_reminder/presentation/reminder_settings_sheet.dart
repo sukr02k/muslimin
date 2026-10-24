@@ -23,9 +23,11 @@ class ReminderSettingsSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(reminderSettingsProvider);
     final notificationService = ref.watch(localNotificationServiceProvider);
-    final isDark = context.isDark;
 
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
       decoration: BoxDecoration(
         color: context.surfaceColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -48,172 +50,162 @@ class ReminderSettingsSheet extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                'Pengingat Adhan Otomatis',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: context.textPrimaryColor,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Atur alarm suara adhan dan waktu pengingat sebelum sholat.',
-                style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
-              ),
-              const SizedBox(height: 16),
-
-              // Banner Uji Coba Kumandang Adhan yang Jelas & Menarik
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkPrimaryContainer : AppColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF065F46) : const Color(0xFFA7F3D0),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pengingat Adhan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: context.textPrimaryColor,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Atur alarm adhan dan waktu pengingat sholat.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textSecondaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () async {
+                      await notificationService.requestPermission();
+                      await notificationService.showTestNotification();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Memutar kumandang adhan di bilah notifikasi...'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF064E3B) : Colors.white,
-                        shape: BoxShape.circle,
+                        color: context.primaryContainerColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: context.borderColor),
                       ),
-                      child: Icon(
-                        Icons.volume_up_rounded,
-                        color: isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Uji Suara Kumandang Adhan',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? AppColors.darkOnPrimaryContainer : AppColors.onPrimaryContainer,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Putar sampel adhan merdu yang tersimpan offline.',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? const Color(0xFFA7F3D0) : AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: isDark ? const Color(0xFF059669) : AppColors.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: () async {
-                        await notificationService.requestPermission();
-                        await notificationService.showTestNotification();
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Memutar kumandang adhan di bilah notifikasi...'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.play_arrow_rounded, size: 16),
-                          SizedBox(width: 4),
-                          Text('Putar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                          Icon(
+                            Icons.volume_up_rounded,
+                            size: 14,
+                            color: context.isDark
+                                ? AppColors.darkOnPrimaryContainer
+                                : AppColors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Uji Suara',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: context.isDark
+                                  ? AppColors.darkOnPrimaryContainer
+                                  : AppColors.primary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Daftar Waktu Sholat & Segmented Offset Langsung
-              settingsAsync.when(
-                loading: () => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
-                ),
-                error: (e, _) => Text(
-                  'Gagal memuat pengaturan: $e',
-                  style: const TextStyle(color: AppColors.danger),
-                ),
-                data: (settings) {
-                  return Column(
-                    children: [
-                      for (final name in PrayerName.values) ...[
-                        _PrayerReminderTile(
-                          config: settings.configs[name] ??
-                              PrayerReminderConfig(name: name),
-                          onToggle: (enabled) {
-                            ref
-                                .read(reminderSettingsProvider.notifier)
-                                .updateConfig(name, isEnabled: enabled);
-                          },
-                          onOffsetChanged: (offset) {
-                            ref
-                                .read(reminderSettingsProvider.notifier)
-                                .updateConfig(name, offsetMinutes: offset);
-                          },
-                        ),
-                        if (name != PrayerName.isha)
-                          Divider(height: 1, color: context.borderColor),
-                      ],
-                    ],
-                  );
-                },
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              Divider(height: 1, color: context.borderColor),
 
-              // Petunjuk optimasi daya baterai perangkat (Bahasa General)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.surfaceMutedColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.borderColor),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.battery_charging_full_rounded,
-                      size: 18,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Agar pengingat selalu berbunyi tepat waktu saat layar ponsel terkunci, pastikan izin aktivitas latar belakang dan optimasi baterai untuk aplikasi ini diatur ke "Tidak Dibatasi" pada pengaturan perangkat Anda.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          height: 1.4,
-                          color: context.textSecondaryColor,
+              // Area Scrollable untuk daftar sholat & petunjuk daya
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      settingsAsync.when(
+                        loading: () => const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(color: AppColors.primary),
+                          ),
+                        ),
+                        error: (e, _) => Text(
+                          'Gagal memuat pengaturan: $e',
+                          style: const TextStyle(color: AppColors.danger),
+                        ),
+                        data: (settings) {
+                          return Column(
+                            children: [
+                              for (final name in PrayerName.values) ...[
+                                _PrayerReminderTile(
+                                  config: settings.configs[name] ??
+                                      PrayerReminderConfig(name: name),
+                                  onToggle: (enabled) {
+                                    ref
+                                        .read(reminderSettingsProvider.notifier)
+                                        .updateConfig(name, isEnabled: enabled);
+                                  },
+                                  onOffsetChanged: (offset) {
+                                    ref
+                                        .read(reminderSettingsProvider.notifier)
+                                        .updateConfig(name, offsetMinutes: offset);
+                                  },
+                                ),
+                                if (name != PrayerName.isha)
+                                  Divider(height: 1, color: context.borderColor),
+                              ],
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.surfaceMutedColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: context.borderColor),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.battery_charging_full_rounded,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Agar pengingat selalu berbunyi tepat waktu saat layar terkunci, pastikan izin aktivitas latar belakang dan optimasi baterai untuk aplikasi ini diatur ke "Tidak Dibatasi" pada pengaturan perangkat.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  height: 1.4,
+                                  color: context.textSecondaryColor,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+
+              const SizedBox(height: 12),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -252,14 +244,14 @@ class _PrayerReminderTile extends StatelessWidget {
     final isDark = context.isDark;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
                   color: config.isEnabled
                       ? context.primaryContainerColor
@@ -270,7 +262,7 @@ class _PrayerReminderTile extends StatelessWidget {
                   config.isEnabled
                       ? Icons.notifications_active_rounded
                       : Icons.notifications_off_outlined,
-                  size: 18,
+                  size: 16,
                   color: config.isEnabled
                       ? (isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary)
                       : AppColors.textMuted,
@@ -281,7 +273,7 @@ class _PrayerReminderTile extends StatelessWidget {
                 child: Text(
                   config.name.labelId,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: context.textPrimaryColor,
                     letterSpacing: -0.2,
@@ -296,13 +288,12 @@ class _PrayerReminderTile extends StatelessWidget {
             ],
           ),
           if (config.isEnabled) ...[
-            const SizedBox(height: 8),
-            // Segmented Chips horizontal cepat: 0m, 5m, 10m, 15m, 30m
+            const SizedBox(height: 6),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  const SizedBox(width: 44),
+                  const SizedBox(width: 36),
                   _offsetChip(context, 0, 'Tepat Waktu'),
                   const SizedBox(width: 6),
                   _offsetChip(context, 5, '5 mnt sblm'),
@@ -343,7 +334,7 @@ class _PrayerReminderTile extends StatelessWidget {
         onTap: () => onOffsetChanged(minutes),
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(8),
