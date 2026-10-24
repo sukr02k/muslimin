@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -63,13 +64,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        // Jika sedang di tab selain tab pertama (Jadwal), kembalikan ke tab Jadwal dulu
+        // 1. Jika sedang di tab selain tab pertama (Jadwal), kembalikan ke tab Jadwal
         if (_index != 0) {
           setState(() => _index = 0);
           return;
         }
 
-        // Deteksi double-tap back dalam rentang 2 detik untuk keluar aplikasi
+        // 2. Deteksi tap back 2x dalam rentang 2 detik
         final now = DateTime.now();
         if (_lastBackPressTime == null ||
             now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
@@ -84,8 +85,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           return;
         }
 
-        // Keluar aplikasi
-        Navigator.of(context).pop();
+        // 3. Mengirim aplikasi ke latar belakang (Home Screen OS) secara bersih
+        SystemNavigator.pop();
       },
       child: Scaffold(
         body: IndexedStack(index: _index, children: _screens),

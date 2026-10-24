@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vibration/vibration.dart';
 
 import '../../../core/prayer_name.dart';
 import '../../../core/theme/app_theme.dart';
@@ -385,6 +386,27 @@ class _ShadcnSegmentedControl extends StatelessWidget {
   final void Function(PrayerStatus) onSelect;
   final VoidCallback onClear;
 
+  static Future<void> _triggerHaptic({required bool isDone}) async {
+    try {
+      final hasVibrator = await Vibration.hasVibrator();
+      if (hasVibrator == true) {
+        await Vibration.vibrate(
+          duration: isDone ? 45 : 30,
+          amplitude: isDone ? 128 : 80,
+        );
+        return;
+      }
+    } catch (_) {}
+
+    try {
+      if (isDone) {
+        await HapticFeedback.lightImpact();
+      } else {
+        await HapticFeedback.selectionClick();
+      }
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -407,7 +429,7 @@ class _ShadcnSegmentedControl extends StatelessWidget {
             activeColor: AppColors.primary,
             activeBg: activeBtnBg,
             onTap: () {
-              HapticFeedback.lightImpact();
+              _triggerHaptic(isDone: true);
               if (current == PrayerStatus.done) {
                 onClear();
               } else {
@@ -423,7 +445,7 @@ class _ShadcnSegmentedControl extends StatelessWidget {
             activeColor: AppColors.danger,
             activeBg: activeBtnBg,
             onTap: () {
-              HapticFeedback.selectionClick();
+              _triggerHaptic(isDone: false);
               if (current == PrayerStatus.missed) {
                 onClear();
               } else {
