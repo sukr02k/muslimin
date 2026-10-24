@@ -12,6 +12,7 @@ class WeeklyCalendarStrip extends StatelessWidget {
     required this.onPreviousWeek,
     required this.onNextWeek,
     required this.onGoToday,
+    this.completedCountsByDate = const {},
   });
 
   final DateTime selectedDate;
@@ -19,6 +20,9 @@ class WeeklyCalendarStrip extends StatelessWidget {
   final VoidCallback onPreviousWeek;
   final VoidCallback onNextWeek;
   final VoidCallback onGoToday;
+
+  /// Peta penyelesaian sholat per tanggal (jumlah sholat done 0..5)
+  final Map<DateTime, int> completedCountsByDate;
 
   static const _weekdayAbbr = ['Sn', 'Sl', 'Rb', 'Km', 'Jm', 'Sb', 'Mg'];
 
@@ -32,8 +36,7 @@ class WeeklyCalendarStrip extends StatelessWidget {
 
     final isDark = context.isDark;
 
-    // Hitung hari Senin pada minggu dari selectedDate
-    // weekday di Dart: 1 = Senin, 7 = Minggu
+    // Hitung hari Senin pada minggu dari selectedDate (1 = Senin, 7 = Minggu)
     final monday = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
     final weekDays = List.generate(7, (i) => monday.add(Duration(days: i)));
 
@@ -125,6 +128,7 @@ class WeeklyCalendarStrip extends StatelessWidget {
                       date.month == today.month &&
                       date.day == today.day,
                   weekdayLabel: _weekdayAbbr[date.weekday - 1],
+                  doneCount: completedCountsByDate[DateTime(date.year, date.month, date.day)],
                   onTap: () => onDateSelected(date),
                 ),
             ],
@@ -160,6 +164,7 @@ class _DayPill extends StatelessWidget {
     required this.isSelected,
     required this.isToday,
     required this.weekdayLabel,
+    this.doneCount,
     required this.onTap,
   });
 
@@ -167,6 +172,7 @@ class _DayPill extends StatelessWidget {
   final bool isSelected;
   final bool isToday;
   final String weekdayLabel;
+  final int? doneCount;
   final VoidCallback onTap;
 
   @override
@@ -195,6 +201,10 @@ class _DayPill extends StatelessWidget {
       numTextColor = context.textPrimaryColor;
     }
 
+    final hasCount = doneCount != null;
+    final isDone5 = (doneCount ?? 0) >= 5;
+    final hasSome = (doneCount ?? 0) > 0;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -202,7 +212,7 @@ class _DayPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 40,
+          width: 42,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: pillBg,
@@ -229,7 +239,7 @@ class _DayPill extends StatelessWidget {
                   color: dayTextColor,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 '${date.day}',
                 style: TextStyle(
@@ -239,6 +249,36 @@ class _DayPill extends StatelessWidget {
                   letterSpacing: -0.3,
                 ),
               ),
+              if (hasCount) ...[
+                const SizedBox(height: 4),
+                // Indikator status kepatuhan sholat langsung di bawah tanggal
+                if (isDone5)
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 13,
+                    color: isSelected ? Colors.white : AppColors.primary,
+                  )
+                else if (hasSome)
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected ? Colors.white : const Color(0xFF38BDF8),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.4)
+                          : (isDark ? AppColors.darkBorder : const Color(0xFFCBD5E1)),
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

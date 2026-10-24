@@ -6,7 +6,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/shadcn_widgets.dart';
 import '../../../core/theme/weekly_calendar_strip.dart';
 import '../domain/prayer_status.dart';
-import '../domain/prayer_tracker_summary.dart';
 import 'prayer_tracker_controllers.dart';
 
 class PrayerTrackerScreen extends ConsumerWidget {
@@ -39,9 +38,20 @@ class _TrackerDateNavigator extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final date = ref.watch(trackerDateProvider);
+    final summaryAsync = ref.watch(trackerSummaryProvider);
+
+    // Ambil data progres sholat 7 hari untuk ditampilkan langsung di kalender atas
+    final summary = summaryAsync.value;
+    final countsMap = <DateTime, int>{};
+    if (summary != null) {
+      for (final p in summary.weeklyProgress) {
+        countsMap[DateTime(p.date.year, p.date.month, p.date.day)] = p.doneCount;
+      }
+    }
 
     return WeeklyCalendarStrip(
       selectedDate: date,
+      completedCountsByDate: countsMap,
       onDateSelected: (newDate) {
         ref.read(trackerDateProvider.notifier).setDate(newDate);
       },
@@ -68,19 +78,18 @@ class _SummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(trackerSummaryProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ShadcnCard(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: summary.when(
         loading: () => const SizedBox(
-          height: 60,
+          height: 52,
           child: Center(
             child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
             ),
           ),
         ),
@@ -88,138 +97,40 @@ class _SummaryCard extends ConsumerWidget {
           'Gagal memuat: $e',
           style: const TextStyle(fontSize: 13, color: AppColors.danger),
         ),
-        data: (s) => Column(
+        data: (s) => Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _StatTile(
-                    icon: Icons.local_fire_department_rounded,
-                    iconColor: const Color(0xFFEA580C),
-                    iconBg: isDark
-                        ? const Color(0xFF451A03)
-                        : const Color(0xFFFFF7ED),
-                    value: '${s.streak}',
-                    unit: 'hari',
-                    label: 'Streak Sholat',
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 48,
-                  color: isDark ? AppColors.darkBorder : AppColors.borderSubtle,
-                ),
-                Expanded(
-                  child: _StatTile(
-                    icon: Icons.check_circle_rounded,
-                    iconColor: AppColors.primary,
-                    iconBg: isDark
-                        ? AppColors.darkPrimaryContainer
-                        : AppColors.primaryContainer,
-                    value: '${s.doneLast7Days}',
-                    unit: '/35',
-                    label: '7 Hari Terakhir',
-                  ),
-                ),
-              ],
+            Expanded(
+              child: _StatTile(
+                icon: Icons.local_fire_department_rounded,
+                iconColor: const Color(0xFFEA580C),
+                iconBg: isDark
+                    ? const Color(0xFF451A03)
+                    : const Color(0xFFFFF7ED),
+                value: '${s.streak}',
+                unit: 'hari',
+                label: 'Streak Sholat',
+              ),
             ),
-            if (s.weeklyProgress.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Divider(
-                color: isDark ? AppColors.darkBorder : AppColors.borderSubtle,
+            Container(
+              width: 1,
+              height: 44,
+              color: isDark ? AppColors.darkBorder : AppColors.borderSubtle,
+            ),
+            Expanded(
+              child: _StatTile(
+                icon: Icons.check_circle_rounded,
+                iconColor: AppColors.primary,
+                iconBg: isDark
+                    ? AppColors.darkPrimaryContainer
+                    : AppColors.primaryContainer,
+                value: '${s.doneLast7Days}',
+                unit: '/35',
+                label: '7 Hari Terakhir',
               ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  for (final day in s.weeklyProgress)
-                    _WeeklyDayItem(dayProgress: day),
-                ],
-              ),
-            ],
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _WeeklyDayItem extends StatelessWidget {
-  const _WeeklyDayItem({required this.dayProgress});
-
-  final DayProgress dayProgress;
-
-  static const _dayAbbr = ['Sn', 'Sl', 'Rb', 'Km', 'Jm', 'Sb', 'Mg'];
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isDone5 = dayProgress.isFullyCompleted;
-    final hasSome = dayProgress.doneCount > 0;
-    final dayLabel = _dayAbbr[dayProgress.date.weekday - 1];
-
-    Color ringColor;
-    Color bgColor;
-    Color textColor;
-
-    if (isDone5) {
-      ringColor = AppColors.primary;
-      bgColor = isDark ? AppColors.darkPrimaryContainer : AppColors.primaryContainer;
-      textColor = isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary;
-    } else if (hasSome) {
-      ringColor = const Color(0xFF38BDF8);
-      bgColor = isDark ? const Color(0xFF0C4A6E) : const Color(0xFFF0F9FF);
-      textColor = const Color(0xFF38BDF8);
-    } else {
-      ringColor = isDark ? AppColors.darkBorder : AppColors.border;
-      bgColor = isDark ? AppColors.darkSurfaceMuted : AppColors.surfaceSubtle;
-      textColor = AppColors.textMuted;
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          dayLabel,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: dayProgress.isToday ? FontWeight.w700 : FontWeight.w500,
-            color: dayProgress.isToday
-                ? theme.colorScheme.onSurface
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: bgColor,
-            border: Border.all(
-              color: dayProgress.isToday ? AppColors.primary : ringColor,
-              width: dayProgress.isToday ? 2.0 : 1.5,
-            ),
-          ),
-          child: Center(
-            child: isDone5
-                ? const Icon(
-                    Icons.check_rounded,
-                    size: 16,
-                    color: AppColors.primary,
-                  )
-                : Text(
-                    '${dayProgress.doneCount}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: textColor,
-                    ),
-                  ),
-          ),
-        ),
-      ],
     );
   }
 }
