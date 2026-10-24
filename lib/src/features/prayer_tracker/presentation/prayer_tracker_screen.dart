@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/prayer_name.dart';
@@ -406,6 +407,7 @@ class _ShadcnSegmentedControl extends StatelessWidget {
             activeColor: AppColors.primary,
             activeBg: activeBtnBg,
             onTap: () {
+              HapticFeedback.lightImpact();
               if (current == PrayerStatus.done) {
                 onClear();
               } else {
@@ -421,6 +423,7 @@ class _ShadcnSegmentedControl extends StatelessWidget {
             activeColor: AppColors.danger,
             activeBg: activeBtnBg,
             onTap: () {
+              HapticFeedback.selectionClick();
               if (current == PrayerStatus.missed) {
                 onClear();
               } else {
