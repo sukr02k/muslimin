@@ -27,6 +27,9 @@ class _ModernSettingsSheetState extends State<ModernSettingsSheet> {
     final borderColor = context.borderColor;
 
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -50,7 +53,7 @@ class _ModernSettingsSheetState extends State<ModernSettingsSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Pengaturan Jadwal & Tampilan',
+                'Pengaturan',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -58,169 +61,181 @@ class _ModernSettingsSheetState extends State<ModernSettingsSheet> {
                   letterSpacing: -0.4,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
+              Divider(height: 1, color: borderColor),
 
-              // 1. TEMA TAMPILAN (3 Horizontal Grid Cards)
-              const Text(
-                'TEMA TAMPILAN',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0.6,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Consumer(
-                builder: (context, ref, _) {
-                  final themeMode = ref.watch(appThemeModeProvider);
-                  return Row(
+              // Area Scrollable Fleksibel
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: _ThemeModeCard(
-                          label: 'Sistem',
-                          icon: Icons.brightness_auto_rounded,
-                          isSelected: themeMode == ThemeMode.system,
-                          onTap: () => ref
-                              .read(appThemeModeProvider.notifier)
-                              .setThemeMode(ThemeMode.system),
+                      // 1. TEMA TAMPILAN (3 Horizontal Grid Cards)
+                      const Text(
+                        'TEMA TAMPILAN',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMuted,
+                          letterSpacing: 0.6,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _ThemeModeCard(
-                          label: 'Terang',
-                          icon: Icons.light_mode_rounded,
-                          isSelected: themeMode == ThemeMode.light,
-                          onTap: () => ref
-                              .read(appThemeModeProvider.notifier)
-                              .setThemeMode(ThemeMode.light),
+                      const SizedBox(height: 8),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final themeMode = ref.watch(appThemeModeProvider);
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: _ThemeModeCard(
+                                  label: 'Sistem',
+                                  icon: Icons.brightness_auto_rounded,
+                                  isSelected: themeMode == ThemeMode.system,
+                                  onTap: () => ref
+                                      .read(appThemeModeProvider.notifier)
+                                      .setThemeMode(ThemeMode.system),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _ThemeModeCard(
+                                  label: 'Terang',
+                                  icon: Icons.light_mode_rounded,
+                                  isSelected: themeMode == ThemeMode.light,
+                                  onTap: () => ref
+                                      .read(appThemeModeProvider.notifier)
+                                      .setThemeMode(ThemeMode.light),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _ThemeModeCard(
+                                  label: 'OLED Gelap',
+                                  icon: Icons.dark_mode_rounded,
+                                  isSelected: themeMode == ThemeMode.dark,
+                                  onTap: () => ref
+                                      .read(appThemeModeProvider.notifier)
+                                      .setThemeMode(ThemeMode.dark),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 2. MAZHAB WAKTU ASHAR (2 Segmented Pills)
+                      const Text(
+                        'MAZHAB (WAKTU ASHAR)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMuted,
+                          letterSpacing: 0.6,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _ThemeModeCard(
-                          label: 'OLED Gelap',
-                          icon: Icons.dark_mode_rounded,
-                          isSelected: themeMode == ThemeMode.dark,
-                          onTap: () => ref
-                              .read(appThemeModeProvider.notifier)
-                              .setThemeMode(ThemeMode.dark),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _MadhabOptionCard(
+                              title: 'Syafi\'i / Maliki / Hanbali',
+                              badge: 'Standar Indonesia',
+                              desc: 'Bayangan 1x — Waktu ashar masuk lebih awal',
+                              isSelected: _madhab == PrayerMadhab.shafi,
+                              onTap: () => setState(() => _madhab = PrayerMadhab.shafi),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _MadhabOptionCard(
+                              title: 'Hanafi',
+                              badge: 'Asia Selatan / Turki',
+                              desc: 'Bayangan 2x — Waktu ashar mundur ~45 menit',
+                              isSelected: _madhab == PrayerMadhab.hanafi,
+                              onTap: () => setState(() => _madhab = PrayerMadhab.hanafi),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 3. METODE KALKULASI SUBTITLED LIST
+                      const Text(
+                        'METODE KALKULASI ASTRONOMI',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMuted,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Column(
+                          children: [
+                            _MethodOptionTile(
+                              title: 'Kemenag RI',
+                              subtitle: 'Standar Kementerian Agama RI (Subuh 20°, Isya 18°)',
+                              isRecommended: true,
+                              isSelected: _method == PrayerMethod.kemenag,
+                              onTap: () => setState(() => _method = PrayerMethod.kemenag),
+                            ),
+                            Divider(height: 1, color: borderColor),
+                            _MethodOptionTile(
+                              title: 'Muslim World League (MWL)',
+                              subtitle: 'Standar internasional Eropa, Amerika, & global (18°/17°)',
+                              isSelected: _method == PrayerMethod.muslimWorldLeague,
+                              onTap: () => setState(() => _method = PrayerMethod.muslimWorldLeague),
+                            ),
+                            Divider(height: 1, color: borderColor),
+                            _MethodOptionTile(
+                              title: 'Otoritas Mesir (Egyptian)',
+                              subtitle: 'Otoritas Umum Survei Mesir & Afrika Utara (19.5°/17.5°)',
+                              isSelected: _method == PrayerMethod.egyptian,
+                              onTap: () => setState(() => _method = PrayerMethod.egyptian),
+                            ),
+                            Divider(height: 1, color: borderColor),
+                            _MethodOptionTile(
+                              title: 'Umm al-Qura (Makkah)',
+                              subtitle: 'Standar Arab Saudi (Isya 90 menit setelah Maghrib)',
+                              isSelected: _method == PrayerMethod.ummAlQura,
+                              onTap: () => setState(() => _method = PrayerMethod.ummAlQura),
+                            ),
+                            Divider(height: 1, color: borderColor),
+                            _MethodOptionTile(
+                              title: 'Karachi (Pakistan)',
+                              subtitle: 'Universitas Ilmu Islam Karachi (18°/18°)',
+                              isSelected: _method == PrayerMethod.karachi,
+                              onTap: () => setState(() => _method = PrayerMethod.karachi),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // Tombol Info & Tentang Aplikasi
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: () => _showAboutDialog(context),
+                          icon: const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textMuted),
+                          label: const Text(
+                            'Tentang Muslimin v1.0.0',
+                            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                          ),
                         ),
                       ),
                     ],
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // 2. MAZHAB WAKTU ASHAR (2 Segmented Pills)
-              const Text(
-                'MAZHAB (WAKTU ASHAR)',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0.6,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _MadhabOptionCard(
-                      title: 'Syafi\'i / Maliki / Hanbali',
-                      badge: 'Standar Indonesia',
-                      desc: 'Bayangan 1x — Waktu ashar masuk lebih awal',
-                      isSelected: _madhab == PrayerMadhab.shafi,
-                      onTap: () => setState(() => _madhab = PrayerMadhab.shafi),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _MadhabOptionCard(
-                      title: 'Hanafi',
-                      badge: 'Asia Selatan / Turki',
-                      desc: 'Bayangan 2x — Waktu ashar mundur ~45 menit',
-                      isSelected: _madhab == PrayerMadhab.hanafi,
-                      onTap: () => setState(() => _madhab = PrayerMadhab.hanafi),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // 3. METODE KALKULASI SUBTITLED LIST
-              const Text(
-                'METODE KALKULASI ASTRONOMI',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0.6,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Column(
-                  children: [
-                    _MethodOptionTile(
-                      title: 'Kemenag RI',
-                      subtitle: 'Standar Kementerian Agama RI (Subuh 20°, Isya 18°)',
-                      isRecommended: true,
-                      isSelected: _method == PrayerMethod.kemenag,
-                      onTap: () => setState(() => _method = PrayerMethod.kemenag),
-                    ),
-                    Divider(height: 1, color: borderColor),
-                    _MethodOptionTile(
-                      title: 'Muslim World League (MWL)',
-                      subtitle: 'Standar internasional Eropa, Amerika, & global (18°/17°)',
-                      isSelected: _method == PrayerMethod.muslimWorldLeague,
-                      onTap: () => setState(() => _method = PrayerMethod.muslimWorldLeague),
-                    ),
-                    Divider(height: 1, color: borderColor),
-                    _MethodOptionTile(
-                      title: 'Otoritas Mesir (Egyptian)',
-                      subtitle: 'Otoritas Umum Survei Mesir & Afrika Utara (19.5°/17.5°)',
-                      isSelected: _method == PrayerMethod.egyptian,
-                      onTap: () => setState(() => _method = PrayerMethod.egyptian),
-                    ),
-                    Divider(height: 1, color: borderColor),
-                    _MethodOptionTile(
-                      title: 'Umm al-Qura (Makkah)',
-                      subtitle: 'Standar Arab Saudi (Isya 90 menit setelah Maghrib)',
-                      isSelected: _method == PrayerMethod.ummAlQura,
-                      onTap: () => setState(() => _method = PrayerMethod.ummAlQura),
-                    ),
-                    Divider(height: 1, color: borderColor),
-                    _MethodOptionTile(
-                      title: 'Karachi (Pakistan)',
-                      subtitle: 'Universitas Ilmu Islam Karachi (18°/18°)',
-                      isSelected: _method == PrayerMethod.karachi,
-                      onTap: () => setState(() => _method = PrayerMethod.karachi),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Tombol Info & Tentang Aplikasi
-              Center(
-                child: TextButton.icon(
-                  onPressed: () => _showAboutDialog(context),
-                  icon: const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textMuted),
-                  label: const Text(
-                    'Tentang Muslimin v1.0.0',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
 
+              const SizedBox(height: 12),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
