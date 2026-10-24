@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/shadcn_dialog.dart';
 import '../../../../core/theme/shadcn_widgets.dart';
 import '../../../../core/theme/theme_mode_controller.dart';
 import '../../domain/prayer_settings.dart';
@@ -245,68 +246,38 @@ class _ModernSettingsSheetState extends State<ModernSettingsSheet> {
   }
 
   void _showAboutDialog(BuildContext context) {
-    showDialog<void>(
+    ShadcnDialog.show<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.surfaceColor,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: context.primaryContainerColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.mosque_rounded, color: AppColors.primary, size: 22),
+      icon: Icons.mosque_rounded,
+      title: 'Muslimin',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Versi 1.0.0',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
             ),
-            const SizedBox(width: 12),
-            Text(
-              'Muslimin',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: context.textPrimaryColor,
-              ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Aplikasi pengingat jadwal sholat, arah kiblat, Al-Qur\'an, dan tasbih digital yang mengutamakan privasi pengguna.',
+            style: TextStyle(fontSize: 13, color: context.textSecondaryColor, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            '• Bebas iklan dan dapat digunakan tanpa koneksi internet.\n'
+            '• Data lokasi dan riwayat ibadah tersimpan di perangkat Anda.\n'
+            '• Perhitungan jadwal sholat berdasar kriteria Kementerian Agama RI & Adhan Library.\n'
+            '• Teks Al-Qur\'an Uthmani & Terjemahan resmi Kementerian Agama RI.',
+            style: TextStyle(
+              fontSize: 12,
+              color: context.textPrimaryColor,
+              height: 1.5,
             ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Versi 1.0.0 (Offline Edition)',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Muslimin dirancang sebagai aplikasi ibadah harian yang mengutamakan privasi dan kemandirian perangkat.',
-              style: TextStyle(fontSize: 13, color: context.textSecondaryColor, height: 1.4),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '• 100% Bebas Iklan & Offline Murni.\n'
-              '• Tidak ada data lokasi atau riwayat ibadah yang dikirimkan ke server luar.\n'
-              '• Perhitungan astronomi terverifikasi (Kemenag RI & Adhan Calculation Library).\n'
-              '• Teks Al-Qur\'an Uthmani & Terjemahan resmi Kementerian Agama RI.',
-              style: TextStyle(
-                fontSize: 12,
-                color: context.textPrimaryColor,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/shadcn_dialog.dart';
 import '../../../core/theme/shadcn_widgets.dart';
 import '../../prayer_times/presentation/prayer_times_controllers.dart';
 import '../domain/qibla_calculator.dart';
@@ -249,61 +250,29 @@ class _QiblaFinderScreenState extends ConsumerState<QiblaFinderScreen> {
   }
 
   void _showCalibrationDialog(BuildContext context) {
-    final textTitleColor = context.textPrimaryColor;
-    final textSubColor = context.textSecondaryColor;
-
-    showDialog<void>(
+    ShadcnDialog.show<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.surfaceColor,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(Icons.compass_calibration_rounded, color: AppColors.primary),
-            const SizedBox(width: 10),
-            Text(
-              'Kalibrasi Kompas',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: textTitleColor,
-              ),
+      icon: Icons.compass_calibration_rounded,
+      title: 'Kalibrasi Kompas',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Jika arah kompas terasa kurang presisi atau berputar lambat:',
+            style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '1. Pegang ponsel mendatar di udara.\n'
+            '2. Gerakkan ponsel membentuk pola angka delapan (∞) sebanyak 3 - 5 kali.\n'
+            '3. Hindari area dekat medan magnet seperti laptop, speaker, atau logam tebal.',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: context.textPrimaryColor,
+              height: 1.5,
             ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Jika arah kompas terasa kurang presisi atau berputar lambat:',
-              style: TextStyle(fontSize: 13, color: textSubColor),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '1. Pegang ponsel di udara.\n'
-              '2. Gerakkan ponsel membentuk pola angka 8 (∞) sebanyak 3 - 5 kali.\n'
-              '3. Pastikan jauh dari speaker, laptop, atau benda bermedan magnet tinggi.',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: textTitleColor,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Mengerti'),
           ),
         ],
       ),
