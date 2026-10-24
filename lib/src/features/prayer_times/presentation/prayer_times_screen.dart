@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/calendar/hijri_calendar.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/shadcn_widgets.dart';
+import '../../../core/theme/weekly_calendar_strip.dart';
 import '../../adhan_reminder/presentation/reminder_controllers.dart';
 import '../../adhan_reminder/presentation/reminder_settings_sheet.dart';
 import '../domain/daily_prayer_times.dart';
@@ -285,86 +285,25 @@ class _DateNavigator extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final date = ref.watch(selectedDateProvider);
-    final now = DateTime.now();
-    final isToday = date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
 
-    return ShadcnCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: 'Hari sebelumnya',
-            icon: const Icon(Icons.chevron_left, size: 22),
-            visualDensity: VisualDensity.compact,
-            color: context.textSecondaryColor,
-            onPressed: () => ref.read(selectedDateProvider.notifier).previous(),
-          ),
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: isToday
-                  ? null
-                  : () => ref.read(selectedDateProvider.notifier).goToday(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _formatDateId(date),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimaryColor,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    Text(
-                      HijriCalendar.formatHijri(date),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    if (isToday)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 3),
-                        child: ShadcnBadge(
-                          label: 'Hari Ini',
-                          fontSize: 10,
-                        ),
-                      )
-                    else
-                      const Padding(
-                        padding: EdgeInsets.only(top: 2),
-                        child: Text(
-                          'Kembali ke hari ini',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.info,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Hari berikutnya',
-            icon: const Icon(Icons.chevron_right, size: 22),
-            visualDensity: VisualDensity.compact,
-            color: context.textSecondaryColor,
-            onPressed: () => ref.read(selectedDateProvider.notifier).next(),
-          ),
-        ],
-      ),
+    return WeeklyCalendarStrip(
+      selectedDate: date,
+      onDateSelected: (newDate) {
+        ref.read(selectedDateProvider.notifier).setDate(newDate);
+      },
+      onPreviousWeek: () {
+        ref
+            .read(selectedDateProvider.notifier)
+            .setDate(date.subtract(const Duration(days: 7)));
+      },
+      onNextWeek: () {
+        ref
+            .read(selectedDateProvider.notifier)
+            .setDate(date.add(const Duration(days: 7)));
+      },
+      onGoToday: () {
+        ref.read(selectedDateProvider.notifier).goToday();
+      },
     );
   }
 }
@@ -738,34 +677,4 @@ String _formatCountdown(Duration d) {
   }
 
   return '$h jam $m mnt';
-}
-
-const _monthNamesId = [
-  'Januari',
-  'Februari',
-  'Maret',
-  'April',
-  'Mei',
-  'Juni',
-  'Juli',
-  'Agustus',
-  'September',
-  'Oktober',
-  'November',
-  'Desember',
-];
-
-const _weekdayNamesId = [
-  'Senin',
-  'Selasa',
-  'Rabu',
-  'Kamis',
-  'Jumat',
-  'Sabtu',
-  'Minggu',
-];
-
-String _formatDateId(DateTime date) {
-  final weekday = _weekdayNamesId[date.weekday - 1];
-  return '$weekday, ${date.day} ${_monthNamesId[date.month - 1]} ${date.year}';
 }

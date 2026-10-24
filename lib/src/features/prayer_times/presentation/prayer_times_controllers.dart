@@ -85,6 +85,10 @@ class SelectedDateNotifier extends Notifier<DateTime> {
     final now = DateTime.now();
     state = DateTime(now.year, now.month, now.day);
   }
+
+  void setDate(DateTime date) {
+    state = DateTime(date.year, date.month, date.day);
+  }
 }
 
 final dailyPrayerTimesProvider = FutureProvider<DailyPrayerTimes>((ref) async {
