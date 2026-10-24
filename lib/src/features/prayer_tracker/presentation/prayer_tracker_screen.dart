@@ -413,7 +413,7 @@ class _ShadcnSegmentedControl extends StatelessWidget {
               }
             },
           ),
-          const SizedBox(width: 2),
+          const SizedBox(width: 4),
           _SegmentButton(
             label: 'Lewat',
             icon: Icons.close_rounded,
@@ -425,21 +425,6 @@ class _ShadcnSegmentedControl extends StatelessWidget {
                 onClear();
               } else {
                 onSelect(PrayerStatus.missed);
-              }
-            },
-          ),
-          const SizedBox(width: 2),
-          _SegmentButton(
-            label: 'Qada',
-            icon: Icons.replay_rounded,
-            isSelected: current == PrayerStatus.qada,
-            activeColor: AppColors.warning,
-            activeBg: activeBtnBg,
-            onTap: () {
-              if (current == PrayerStatus.qada) {
-                onClear();
-              } else {
-                onSelect(PrayerStatus.qada);
               }
             },
           ),
@@ -479,7 +464,7 @@ class _SegmentButton extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: isSelected ? activeBg : Colors.transparent,
             borderRadius: BorderRadius.circular(7),

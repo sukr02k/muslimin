@@ -9,6 +9,7 @@ import '../../../core/theme/shadcn_widgets.dart';
 import '../../adhan_reminder/presentation/reminder_controllers.dart';
 import '../../adhan_reminder/presentation/reminder_settings_sheet.dart';
 import '../domain/daily_prayer_times.dart';
+import '../domain/daily_reflection.dart';
 import '../domain/geo_location.dart';
 import '../domain/prayer_settings.dart';
 import 'prayer_times_controllers.dart';
@@ -109,7 +110,11 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
               timesAsync: timesAsync,
               nowUtc: _now.toUtc(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
+            // 5. Kartu Mutiara Renungan Harian (Berganti Otomatis Tiap Hari)
+            _DailyReflectionCard(date: ref.watch(selectedDateProvider)),
+            const SizedBox(height: 18),
           ],
         ),
       ),
@@ -634,6 +639,59 @@ class _PrayerRow extends StatelessWidget {
         PrayerName.maghrib => Icons.nights_stay_rounded,
         PrayerName.isha => Icons.bedtime_rounded,
       };
+}
+
+class _DailyReflectionCard extends StatelessWidget {
+  const _DailyReflectionCard({required this.date});
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    final reflection = DailyReflection.forDate(date);
+    final isDark = context.isDark;
+
+    return ShadcnCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      backgroundColor: isDark ? AppColors.darkSurfaceSubtle : AppColors.surfaceSubtle,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.format_quote_rounded,
+            size: 20,
+            color: isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  reflection.text,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    height: 1.4,
+                    color: context.textPrimaryColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  reflection.source,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LocationError extends StatelessWidget {

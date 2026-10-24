@@ -116,21 +116,24 @@ class WeeklyCalendarStrip extends StatelessWidget {
 
           // Deretan 7 Pill Hari (Senin - Minggu)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              for (final date in weekDays)
-                _DayPill(
-                  date: date,
-                  isSelected: date.year == selectedDate.year &&
-                      date.month == selectedDate.month &&
-                      date.day == selectedDate.day,
-                  isToday: date.year == today.year &&
-                      date.month == today.month &&
-                      date.day == today.day,
-                  weekdayLabel: _weekdayAbbr[date.weekday - 1],
-                  doneCount: completedCountsByDate[DateTime(date.year, date.month, date.day)],
-                  onTap: () => onDateSelected(date),
+              for (int i = 0; i < weekDays.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Expanded(
+                  child: _DayPill(
+                    date: weekDays[i],
+                    isSelected: weekDays[i].year == selectedDate.year &&
+                        weekDays[i].month == selectedDate.month &&
+                        weekDays[i].day == selectedDate.day,
+                    isToday: weekDays[i].year == today.year &&
+                        weekDays[i].month == today.month &&
+                        weekDays[i].day == today.day,
+                    weekdayLabel: _weekdayAbbr[weekDays[i].weekday - 1],
+                    doneCount: completedCountsByDate[DateTime(weekDays[i].year, weekDays[i].month, weekDays[i].day)],
+                    onTap: () => onDateSelected(weekDays[i]),
+                  ),
                 ),
+              ],
             ],
           ),
         ],
@@ -212,7 +215,6 @@ class _DayPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 42,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: pillBg,
