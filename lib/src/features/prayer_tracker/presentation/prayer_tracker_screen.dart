@@ -366,9 +366,9 @@ class _PrayerItemCard extends StatelessWidget {
       };
 
   static String _statusSubtitle(PrayerStatus? s) => switch (s) {
-        PrayerStatus.done => 'Alhamdulillah, terlaksana',
+        PrayerStatus.done => 'Terlaksana',
         PrayerStatus.missed => 'Terlewat',
-        PrayerStatus.qada => 'Qada dikerjakan',
+        PrayerStatus.qada => 'Qada',
         null => 'Belum ditandai',
       };
 }
