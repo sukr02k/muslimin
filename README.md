@@ -22,17 +22,6 @@
 
 ---
 
-## Unduh Aplikasi (Release APK)
-
-| Versi | Format | Arsitektur Target | Ukuran File | Tautan Unduh |
-| :--- | :--- | :--- | :--- | :--- |
-| **v1.0.0** | `.apk` (Release) | `arm64-v8a` (Android modern 64-bit) | **25.4 MB** | [Download Muslimin-v1.0.0-arm64.apk](https://github.com/sukr02k/muslimin/releases/download/v1.0.0/Muslimin-v1.0.0-arm64.apk) |
-| **v1.0.0** | `.apk` (Release) | Universal (Semua arsitektur CPU) | **61.0 MB** | [Download Muslimin-v1.0.0-universal.apk](https://github.com/sukr02k/muslimin/releases/download/v1.0.0/Muslimin-v1.0.0-universal.apk) |
-
-> Halaman rilis lengkap: [github.com/sukr02k/muslimin/releases/tag/v1.0.0](https://github.com/sukr02k/muslimin/releases/tag/v1.0.0)
-
----
-
 ## Ringkasan Proyek (Overview)
 
 **Muslimin** adalah aplikasi pendamping ibadah harian muslim yang dibangun dengan prinsip **100% Offline-First & Privacy-Focused**. Aplikasi ini dirancang tanpa pelacakan data analitik pengguna, tanpa akun/login, dan sepenuhnya bebas iklan komersial.
@@ -138,11 +127,6 @@ erDiagram
         text translation
     }
 ```
-
-> **Keterangan:**
-> - Tabel `PRAYER_LOGS`, `QURAN_BOOKMARKS`, `READING_PROGRESS`, dan `APP_SETTINGS` disimpan di database SQLite perangkat (`app_flutter/muslimin.sqlite`).
-> - Data `SURAH` dan `AYAH` adalah data statis (read-only) yang dibundel di dalam aplikasi (`assets/quran/`).
-> - Pengaturan audio pengingat adhan, lokasi aktif, metode hisab, dan tema tampilan tersimpan di tabel `APP_SETTINGS`.
 
 ---
 
@@ -296,7 +280,7 @@ lib/
 ## Menjalankan Proyek
 
 ### Prasyarat
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (versi stable channel)
+- [Flutter SDK](https://docs.flutter.dev/get-started/install)
 - Android SDK (API level 34 atau 35)
 
 ### Menjalankan Mode Pengembangan
@@ -316,17 +300,6 @@ flutter analyze
 # Jalankan seluruh unit test (46 passed)
 flutter test
 ```
-
-### Membangun Berkas APK Release
-```bash
-# Membangun berkas APK teroptimasi per arsitektur CPU (disarankan untuk perangkat 64-bit)
-flutter build apk --release --split-per-abi
-
-# Membangun berkas APK universal
-flutter build apk --release
-```
-
-Berkas keluaran APK tersimpan di direktori `build/app/outputs/flutter-apk/`.
 
 ---
 
