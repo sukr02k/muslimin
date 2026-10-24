@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/calendar/hijri_calendar.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/shadcn_widgets.dart';
-import '../../../core/theme/weekly_calendar_strip.dart';
 import '../../adhan_reminder/presentation/reminder_controllers.dart';
 import '../../adhan_reminder/presentation/reminder_settings_sheet.dart';
 import '../domain/daily_prayer_times.dart';
@@ -29,7 +29,6 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
   @override
   void initState() {
     super.initState();
-    // Ticker 1 detik agar countdown jam, menit, detik di bawah 1 jam berjalan real-time
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _now = DateTime.now());
     });
@@ -80,44 +79,37 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
           children: [
-            _LocationBar(state: locationState),
-            const SizedBox(height: 12),
-            _DateNavigator(),
-            const SizedBox(height: 16),
+            // 1. Header Terpadu Ringkas: Lokasi & Tanggal + Kalender Picker (Hemat Ruang Vertikal)
+            _UnifiedLocationDateBar(locationState: locationState),
+            const SizedBox(height: 10),
+
             if (locationState.hasError) _LocationError(state: locationState),
             if (settingsState.hasError)
               const _InlineError(message: 'Gagal memuat pengaturan.'),
+
+            // 2. Kartu Hero Menjelang Sholat Ramping
             _NextPrayerCard(
               now: _now,
               timesAsync: timesAsync,
               tomorrowAsync: tomorrowAsync,
             ),
-            const SizedBox(height: 14),
-            // Baris Info Imsak, Terbit/Syuruq, dan Dhuha
+            const SizedBox(height: 10),
+
+            // 3. Mini Bar Imsak, Terbit, Dhuha Ramping
             _SunInfoCards(
               timesAsync: timesAsync,
               location: locationState.value,
             ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
-              child: Text(
-                'Waktu Sholat Hari Ini',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: context.textSecondaryColor,
-                  letterSpacing: -0.2,
-                ),
-              ),
-            ),
+            const SizedBox(height: 14),
+
+            // 4. Tabel 5 Waktu Sholat Utama (Tampil Utuh Tanpa Terpotong)
             _PrayerList(
               timesAsync: timesAsync,
               nowUtc: _now.toUtc(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -138,64 +130,143 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
   }
 }
 
-class _LocationBar extends ConsumerWidget {
-  const _LocationBar({required this.state});
+/// Header terpadu yang menyatukan pemilih lokasi & kalender tanggal dalam 1 baris elegan
+class _UnifiedLocationDateBar extends ConsumerWidget {
+  const _UnifiedLocationDateBar({required this.locationState});
 
-  final AsyncValue<GeoLocation> state;
+  final AsyncValue<GeoLocation> locationState;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final location = locationState.value;
+    final date = ref.watch(selectedDateProvider);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final isToday = date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
+
     final cities = ref.watch(locationRepositoryProvider).cities;
-    final location = state.value;
+    final isDark = context.isDark;
 
     return ShadcnCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      onTap: () => _pickCity(context, ref, cities),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: context.isDark ? AppColors.darkPrimaryContainer : AppColors.primaryContainer,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.location_on_outlined,
-              size: 20,
-              color: context.isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  location?.label ?? 'Memuat lokasi…',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimaryColor,
-                    letterSpacing: -0.2,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkPrimaryContainer : AppColors.primaryContainer,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _pickCity(context, ref, cities),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          location?.label ?? 'Memuat lokasi…',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: context.textPrimaryColor,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textMuted),
+                    ],
                   ),
                 ),
-                Text(
-                  location != null
-                      ? '${location.latitude.toStringAsFixed(3)}, ${location.longitude.toStringAsFixed(3)}'
-                      : 'Menghubungkan GPS...',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
+              ),
+              if (!isToday) ...[
+                InkWell(
+                  onTap: () => ref.read(selectedDateProvider.notifier).goToday(),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: context.primaryContainerColor,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Hari Ini',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary,
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(width: 6),
               ],
-            ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Pilih Tanggal',
+                icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                color: context.textSecondaryColor,
+                onPressed: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: date,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2035),
+                  );
+                  if (picked != null) {
+                    ref.read(selectedDateProvider.notifier).setDate(picked);
+                  }
+                },
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Hari Sebelumnya',
+                icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                color: context.textSecondaryColor,
+                onPressed: () => ref.read(selectedDateProvider.notifier).previous(),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Hari Berikutnya',
+                icon: const Icon(Icons.chevron_right_rounded, size: 20),
+                color: context.textSecondaryColor,
+                onPressed: () => ref.read(selectedDateProvider.notifier).next(),
+              ),
+            ],
           ),
-          const Icon(
-            Icons.unfold_more_rounded,
-            size: 20,
-            color: AppColors.textMuted,
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text(
+                _formatFullDate(date),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: context.textSecondaryColor,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                HijriCalendar.formatHijri(date),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -279,32 +350,15 @@ class _LocationBar extends ConsumerWidget {
       await ref.read(locationProvider.notifier).selectCity(selected);
     }
   }
-}
 
-class _DateNavigator extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final date = ref.watch(selectedDateProvider);
+  static const _weekdayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+  static const _monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
 
-    return WeeklyCalendarStrip(
-      selectedDate: date,
-      onDateSelected: (newDate) {
-        ref.read(selectedDateProvider.notifier).setDate(newDate);
-      },
-      onPreviousWeek: () {
-        ref
-            .read(selectedDateProvider.notifier)
-            .setDate(date.subtract(const Duration(days: 7)));
-      },
-      onNextWeek: () {
-        ref
-            .read(selectedDateProvider.notifier)
-            .setDate(date.add(const Duration(days: 7)));
-      },
-      onGoToday: () {
-        ref.read(selectedDateProvider.notifier).goToday();
-      },
-    );
+  static String _formatFullDate(DateTime d) {
+    return '${_weekdayNames[d.weekday - 1]}, ${d.day} ${_monthNames[d.month - 1]} ${d.year}';
   }
 }
 
@@ -380,7 +434,7 @@ class _SunInfoCards extends StatelessWidget {
             label: 'Imsak',
             time: imsakStr,
             icon: Icons.nightlight_round,
-            iconColor: const Color(0xFF6366F1), // Indigo 500
+            iconColor: const Color(0xFF6366F1),
           ),
         ),
         const SizedBox(width: 8),
@@ -389,7 +443,7 @@ class _SunInfoCards extends StatelessWidget {
             label: 'Terbit',
             time: syuruqStr,
             icon: Icons.wb_twilight_rounded,
-            iconColor: const Color(0xFFF59E0B), // Amber 500
+            iconColor: const Color(0xFFF59E0B),
           ),
         ),
         const SizedBox(width: 8),
@@ -398,7 +452,7 @@ class _SunInfoCards extends StatelessWidget {
             label: 'Dhuha',
             time: dhuhaStr,
             icon: Icons.wb_sunny_rounded,
-            iconColor: const Color(0xFF10B981), // Emerald 500
+            iconColor: const Color(0xFF10B981),
           ),
         ),
       ],
@@ -422,33 +476,34 @@ class _SunInfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ShadcnCard(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      child: Column(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Icon(icon, size: 14, color: iconColor),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 14, color: iconColor),
-              const SizedBox(width: 4),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w500,
                   color: context.textSecondaryColor,
                 ),
               ),
+              Text(
+                time,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.textPrimaryColor,
+                  letterSpacing: -0.3,
+                ),
+              ),
             ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: context.textPrimaryColor,
-              letterSpacing: -0.3,
-            ),
           ),
         ],
       ),
@@ -485,7 +540,7 @@ class _PrayerList extends ConsumerWidget {
             child: Column(
               children: [
                 for (int i = 0; i < times.ordered.length; i++) ...[
-                  if (i > 0) Divider(height: 1, indent: 60, color: context.borderColor),
+                  if (i > 0) Divider(height: 1, indent: 56, color: context.borderColor),
                   _PrayerRow(
                     name: times.ordered[i].$1,
                     time: times.ordered[i].$2,
@@ -523,15 +578,15 @@ class _PrayerRow extends StatelessWidget {
         : AppColors.primaryContainer.withValues(alpha: 0.5);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
       decoration: BoxDecoration(
         color: isUpcoming ? highlightBg : Colors.transparent,
       ),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: isUpcoming
                   ? (isDark ? AppColors.darkPrimaryContainer : AppColors.primaryContainer)
@@ -540,7 +595,7 @@ class _PrayerRow extends StatelessWidget {
             ),
             child: Icon(
               _prayerIcon(name),
-              size: 18,
+              size: 17,
               color: isUpcoming
                   ? (isDark ? AppColors.darkOnPrimaryContainer : AppColors.primary)
                   : context.textSecondaryColor,
@@ -551,7 +606,7 @@ class _PrayerRow extends StatelessWidget {
             child: Text(
               name.labelId,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: isUpcoming ? FontWeight.w700 : FontWeight.w500,
                 color: isUpcoming ? AppColors.primary : context.textPrimaryColor,
                 letterSpacing: -0.2,
@@ -561,7 +616,7 @@ class _PrayerRow extends StatelessWidget {
           Text(
             formatHhMm(time, offset),
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
               color: isUpcoming ? AppColors.primary : context.textPrimaryColor,
               letterSpacing: -0.3,
@@ -666,7 +721,6 @@ String _formatCountdown(Duration d) {
   final m = d.inMinutes % 60;
   final s = d.inSeconds % 60;
 
-  // Jika di bawah 1 jam, tampilkan hitungan detik real-time agar interaktif
   if (h == 0) {
     if (m > 0) {
       final mm = m.toString().padLeft(2, '0');
