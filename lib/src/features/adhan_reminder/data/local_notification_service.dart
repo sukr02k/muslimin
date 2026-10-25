@@ -11,12 +11,12 @@ class LocalNotificationService {
   final FlutterLocalNotificationsPlugin _plugin;
   bool _initialized = false;
 
-  // Mengganti channelId ke v3 agar Android membuat ulang AudioAttributes dengan audio adhan.ogg
-  static const _channelId = 'prayer_adhan_voice_channel_v3';
+  // Channel ID v4 dengan registrasi eksplisit AudioAttributes USAGE_ALARM
+  static const _channelId = 'prayer_adhan_voice_channel_v4';
   static const _channelName = 'Pengingat Adhan Suara';
   static const _channelDescription = 'Notifikasi suara adhan merdu saat masuk waktu sholat fardhu.';
 
-  /// Inisialisasi plugin notifikasi & data timezone perangkat.
+  /// Inisialisasi plugin notifikasi, timezone, dan daftarkan NotificationChannel secara eksplisit ke OS Android.
   Future<void> initialize() async {
     if (_initialized) return;
 
@@ -26,6 +26,26 @@ class LocalNotificationService {
     const initSettings = InitializationSettings(android: androidSettings);
 
     await _plugin.initialize(settings: initSettings);
+
+    // Daftarkan channel secara eksplisit dengan AudioAttributesUsage.alarm
+    // agar suara adhan diperlakukan sebagai ALARM sistem (selalu berbunyi nyaring & tembus lockscreen)
+    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImpl != null) {
+      const soundSource = RawResourceAndroidNotificationSound('adhan');
+      const channel = AndroidNotificationChannel(
+        _channelId,
+        _channelName,
+        description: _channelDescription,
+        importance: Importance.max,
+        playSound: true,
+        sound: soundSource,
+        enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+      );
+      await androidImpl.createNotificationChannel(channel);
+    }
+
     _initialized = true;
   }
 
@@ -62,7 +82,6 @@ class LocalNotificationService {
 
     if (items.isEmpty) return;
 
-    // Nada audio suara adhan dari android/app/src/main/res/raw/adhan.ogg
     const soundSource = RawResourceAndroidNotificationSound('adhan');
 
     const androidDetails = AndroidNotificationDetails(
@@ -74,6 +93,9 @@ class LocalNotificationService {
       sound: soundSource,
       playSound: true,
       enableVibration: true,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      visibility: NotificationVisibility.public,
+      fullScreenIntent: true,
     );
     const notificationDetails = NotificationDetails(android: androidDetails);
 
@@ -117,6 +139,8 @@ class LocalNotificationService {
       sound: soundSource,
       playSound: true,
       enableVibration: true,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      visibility: NotificationVisibility.public,
     );
     const notificationDetails = NotificationDetails(android: androidDetails);
 
