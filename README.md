@@ -294,10 +294,10 @@ flutter run
 
 ### Menjalankan Pengujian Otomatis
 ```bash
-# Analisis statis linter (0 issues)
+# Analisis statis linter
 flutter analyze
 
-# Jalankan seluruh unit test (46 passed)
+# Jalankan seluruh unit test
 flutter test
 ```
 
